@@ -14,9 +14,30 @@ import Filters from ".";
 interface MobileFiltersProps {
   open: boolean;
   onClose: () => void;
+  category: string;
+  setCategory: (category: string) => void;
+  sizes: string[];
+  toggleSize: (size: string) => void;
+  minPrice: string;
+  setMinPrice: (price: string) => void;
+  maxPrice: string;
+  setMaxPrice: (price: string) => void;
+  clearFilters: () => void;
 }
 
-const MobileFilters: React.FC<MobileFiltersProps> = ({ open, onClose }) => {
+const MobileFilters: React.FC<MobileFiltersProps> = ({ 
+  open, 
+  onClose, 
+  category,
+  setCategory,
+  sizes,
+  toggleSize,
+  minPrice,
+  setMinPrice,
+  maxPrice,
+  setMaxPrice,
+  clearFilters
+}) => {
   return (
     <Drawer open={open} onOpenChange={val => { if (!val) onClose(); }}>
       <DrawerContent className="bg-white rounded-[20px] px-5 md:px-6 py-5 space-y-5 md:space-y-6 border border-black/10 max-h-[90%]">
@@ -38,7 +59,17 @@ const MobileFilters: React.FC<MobileFiltersProps> = ({ open, onClose }) => {
           <DrawerDescription className="hidden">filters</DrawerDescription>
         </DrawerHeader>
         <div className="overflow-y-auto w-full">
-          <Filters />
+          <Filters
+            category={category}
+            setCategory={setCategory}
+            sizes={sizes}
+            toggleSize={toggleSize}
+            minPrice={minPrice}
+            setMinPrice={setMinPrice}
+            maxPrice={maxPrice}
+            setMaxPrice={setMaxPrice}
+            clearFilters={clearFilters}
+          />
         </div>
       </DrawerContent>
     </Drawer>

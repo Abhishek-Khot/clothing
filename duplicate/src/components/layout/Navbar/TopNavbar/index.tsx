@@ -45,8 +45,8 @@ const data: NavMenu = [
   {
     id: 4,
     type: "MenuItem",
-    label: "Brands",
-    url: "/shop#brands",
+    label: "Map",
+    url: "https://www.google.com/maps/place/Unique+collection,+mens+wear,+chikhali,/@16.442656,74.3167908,215m/data=!3m1!1e3!4m6!3m5!1s0x3bc0f1b21fad4f17:0xd8c505b1b75946d7!8m2!3d16.4425856!4d74.3165949!16s%2Fg%2F11j8z6tfmx!5m1!1e2?entry=ttu&g_ep=EgoyMDI1MDcyOS4wIKXMDSoASAFQAw%3D%3D",
     children: [],
   },
 ];
@@ -66,7 +66,7 @@ const TopNavbar = () => {
               "text-2xl lg:text-[32px] mb-2 mr-3 lg:mr-10",
             ])}
           >
-            SHOP.CO
+            UNIQUE 
           </Link>
         </div>
         <NavigationMenu className="hidden md:flex mr-2 lg:mr-7">

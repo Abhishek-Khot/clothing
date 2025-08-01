@@ -57,10 +57,10 @@ const Header = () => {
           >
             <div className="flex flex-col">
               <span className="font-bold text-2xl md:text-xl lg:text-3xl xl:text-[40px] xl:mb-2">
-                <AnimatedCounter from={0} to={200} />+
+                <AnimatedCounter from={0} to={20} />+
               </span>
               <span className="text-xs xl:text-base text-black/60 text-nowrap">
-                International Brands
+                Indian Brands
               </span>
             </div>
             <Separator
@@ -69,7 +69,7 @@ const Header = () => {
             />
             <div className="flex flex-col ml-6 md:ml-0">
               <span className="font-bold text-2xl md:text-xl lg:text-3xl xl:text-[40px] xl:mb-2">
-                <AnimatedCounter from={0} to={2000} />+
+                <AnimatedCounter from={0} to={100} />+
               </span>
               <span className="text-xs xl:text-base text-black/60 text-nowrap">
                 High-Quality Products
@@ -81,7 +81,7 @@ const Header = () => {
             />
             <div className="flex flex-col w-full text-center sm:w-auto sm:text-left mt-3 sm:mt-0 sm:ml-6 md:ml-0">
               <span className="font-bold text-2xl md:text-xl lg:text-3xl xl:text-[40px] xl:mb-2">
-                <AnimatedCounter from={0} to={3000} />+
+                <AnimatedCounter from={0} to={1000} />+
               </span>
               <span className="text-xs xl:text-base text-black/60 text-nowrap">
                 Happy Customers

@@ -15,9 +15,10 @@ type ProductListSecProps = {
   title: string;
   data: Product[];
   viewAllLink?: string;
+  showAddToCart?: boolean; // New prop to control Add to Cart button visibility
 };
 
-const ProductListSec = ({ title, data, viewAllLink }: ProductListSecProps) => {
+const ProductListSec = ({ title, data, viewAllLink, showAddToCart = true }: ProductListSecProps) => {
   return (
     <section className="max-w-frame mx-auto text-center">
       <motion.h2
@@ -47,10 +48,10 @@ const ProductListSec = ({ title, data, viewAllLink }: ProductListSecProps) => {
           <CarouselContent className="mx-4 xl:mx-0 space-x-4 sm:space-x-5">
             {data.map((product) => (
               <CarouselItem
-                key={product.id}
+                key={product._id || product.id}
                 className="w-full max-w-[198px] sm:max-w-[295px] pl-0"
               >
-                <ProductCard data={product} />
+                <ProductCard data={product} showAddToCart={showAddToCart} />
               </CarouselItem>
             ))}
           </CarouselContent>

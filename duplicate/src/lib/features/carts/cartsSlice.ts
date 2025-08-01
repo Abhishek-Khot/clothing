@@ -18,18 +18,20 @@ const calcAdjustedTotalPrice = (
 };
 
 export type RemoveCartItem = {
-  id: number;
-  attributes: string[];
+  _id: string;
+  selectedSize?: string;
 };
 
 export type CartItem = {
-  id: number;
-  name: string;
+  _id: string;
+  title: string;
   srcUrl: string;
   price: number;
-  attributes: string[];
+  category: string;
+  sizes: string[];
   discount: Discount;
   quantity: number;
+  selectedSize?: string;
 };
 
 export type Cart = {
@@ -76,8 +78,8 @@ export const cartsSlice = createSlice({
       // check item in cart
       const isItemInCart = state.cart.items.find(
         (item) =>
-          action.payload.id === item.id &&
-          compareArrays(action.payload.attributes, item.attributes)
+          action.payload._id === item._id &&
+          action.payload.selectedSize === item.selectedSize
       );
 
       if (isItemInCart) {
@@ -85,19 +87,15 @@ export const cartsSlice = createSlice({
           ...state.cart,
           items: state.cart.items.map((eachCartItem) => {
             if (
-              eachCartItem.id === action.payload.id
-                ? !compareArrays(
-                    eachCartItem.attributes,
-                    isItemInCart.attributes
-                  )
-                : eachCartItem.id !== action.payload.id
-            )
-              return eachCartItem;
-
-            return {
-              ...isItemInCart,
-              quantity: action.payload.quantity + isItemInCart.quantity,
-            };
+              eachCartItem._id === action.payload._id &&
+              eachCartItem.selectedSize === action.payload.selectedSize
+            ) {
+              return {
+                ...isItemInCart,
+                quantity: action.payload.quantity + isItemInCart.quantity,
+              };
+            }
+            return eachCartItem;
           }),
           totalQuantities: state.cart.totalQuantities + action.payload.quantity,
         };
@@ -126,8 +124,8 @@ export const cartsSlice = createSlice({
       // check item in cart
       const isItemInCart = state.cart.items.find(
         (item) =>
-          action.payload.id === item.id &&
-          compareArrays(action.payload.attributes, item.attributes)
+          action.payload._id === item._id &&
+          action.payload.selectedSize === item.selectedSize
       );
 
       if (isItemInCart) {
@@ -136,19 +134,15 @@ export const cartsSlice = createSlice({
           items: state.cart.items
             .map((eachCartItem) => {
               if (
-                eachCartItem.id === action.payload.id
-                  ? !compareArrays(
-                      eachCartItem.attributes,
-                      isItemInCart.attributes
-                    )
-                  : eachCartItem.id !== action.payload.id
-              )
-                return eachCartItem;
-
-              return {
-                ...isItemInCart,
-                quantity: eachCartItem.quantity - 1,
-              };
+                eachCartItem._id === action.payload._id &&
+                eachCartItem.selectedSize === action.payload.selectedSize
+              ) {
+                return {
+                  ...isItemInCart,
+                  quantity: eachCartItem.quantity - 1,
+                };
+              }
+              return eachCartItem;
             })
             .filter((item) => item.quantity > 0),
           totalQuantities: state.cart.totalQuantities - 1,
@@ -169,8 +163,8 @@ export const cartsSlice = createSlice({
       // check item in cart
       const isItemInCart = state.cart.items.find(
         (item) =>
-          action.payload.id === item.id &&
-          compareArrays(action.payload.attributes, item.attributes)
+          action.payload._id === item._id &&
+          action.payload.selectedSize === item.selectedSize
       );
 
       if (!isItemInCart) return;
@@ -178,9 +172,10 @@ export const cartsSlice = createSlice({
       state.cart = {
         ...state.cart,
         items: state.cart.items.filter((pItem) => {
-          return pItem.id === action.payload.id
-            ? !compareArrays(pItem.attributes, isItemInCart.attributes)
-            : pItem.id !== action.payload.id;
+          return !(
+            pItem._id === action.payload._id &&
+            pItem.selectedSize === action.payload.selectedSize
+          );
         }),
         totalQuantities: state.cart.totalQuantities - isItemInCart.quantity,
       };

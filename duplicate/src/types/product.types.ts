@@ -4,7 +4,8 @@ export type Discount = {
 };
 
 export type Product = {
-  id: string; // MongoDB _id is a string
+  _id: string; // MongoDB _id
+  id?: string; // For backward compatibility
   title: string;
   srcUrl: string;
   gallery?: string[];

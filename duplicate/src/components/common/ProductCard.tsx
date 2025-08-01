@@ -1,8 +1,14 @@
-import React from "react";
+import React, { useState } from "react";
 import Rating from "../ui/Rating";
 import Image from "next/image";
 import Link from "next/link";
 import { Product } from "@/types/product.types";
+import { useAppDispatch } from "@/lib/hooks/redux";
+import { addToCart } from "@/lib/features/carts/cartsSlice";
+import { createCartItem } from "@/lib/utils/cartUtils";
+import { Button } from "@/components/ui/button";
+import { ShoppingCart } from "lucide-react";
+import Toast from "@/components/ui/toast";
 
 type ProductCardProps = {
   data: Product;
@@ -14,8 +20,8 @@ const ProductCard = ({ data }: ProductCardProps) => {
 
   return (
     <Link
-      href={`/shop/product/${data.id}/${data.title.split(" ").join("-")}`}
-      className="flex flex-col items-start aspect-auto"
+      href={`/shop/product/${data._id || data.id}/${data.title.split(" ").join("-")}`}
+      className="flex flex-col items-start aspect-auto group"
     >
       <div className="bg-[#F0EEED] rounded-[13px] lg:rounded-[20px] w-full lg:max-w-[295px] aspect-square mb-2.5 xl:mb-4 overflow-hidden">
         <Image

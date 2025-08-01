@@ -2,6 +2,7 @@ const Product = require('../models/Product');
 const { uploadSingleImage, uploadGalleryImages } = require('../middleware/multer');
 const path = require('path');
 const fs = require('fs');
+const mongoose = require('mongoose');
 
 // @desc    Get admin dashboard
 // @route   GET /admin/dashboard
@@ -113,11 +114,25 @@ exports.createProduct = async (req, res) => {
 // @route   GET /api/products
 // @access  Public
 exports.getProducts = async (req, res) => {
+  // Debug: If no query parameters, show all categories
+  if (Object.keys(req.query).length === 0) {
+    try {
+      const categories = await Product.distinct('category');
+      console.log("All categories in database:", categories);
+      const allProducts = await Product.find({}).limit(5);
+      console.log("Sample products:", allProducts.map(p => ({ id: p._id, title: p.title, category: p.category })));
+    } catch (error) {
+      console.error("Error getting categories:", error);
+    }
+  }
   try {
     // Filters
-    const { category, size, minPrice, maxPrice, sort = '-createdAt', page = 1, limit = 12, search } = req.query;
+    const { category, size, minPrice, maxPrice, sort = '-createdAt', page = 1, limit = 12, search, exclude } = req.query;
     const query = {};
-    if (category) query.category = category;
+    if (category) {
+      query.category = category;
+      console.log("Filtering by category:", category);
+    }
     if (size) query.sizes = size;
     if (minPrice || maxPrice) {
       query.price = {};
@@ -129,6 +144,27 @@ exports.getProducts = async (req, res) => {
         { title: { $regex: search, $options: 'i' } },
         { description: { $regex: search, $options: 'i' } }
       ];
+    }
+    // Exclude specific product(s)
+    if (exclude) {
+      const excludeIds = Array.isArray(exclude) ? exclude : [exclude];
+      // Convert string IDs to ObjectIds
+      const objectIds = excludeIds.filter(id => {
+        try {
+          mongoose.Types.ObjectId(id);
+          return true;
+        } catch (error) {
+          console.log("Invalid ObjectId:", id);
+          return false;
+        }
+      }).map(id => mongoose.Types.ObjectId(id));
+      
+      if (objectIds.length > 0) {
+        query._id = { $nin: objectIds };
+        console.log("Excluding products with IDs:", excludeIds);
+      } else {
+        console.log("No valid ObjectIds to exclude");
+      }
     }
     // Pagination
     const pageNum = parseInt(page, 10) || 1;
@@ -142,11 +178,20 @@ exports.getProducts = async (req, res) => {
     else if (sort === 'oldest') sortObj.createdAt = 1;
     else sortObj = { createdAt: -1 };
     // Query
+    console.log("Final query:", JSON.stringify(query, null, 2));
+    
+    // Debug: Show all categories in database
+    if (category) {
+      const allCategories = await Product.distinct('category');
+      console.log("All categories in database:", allCategories);
+    }
+    
     const total = await Product.countDocuments(query);
     const products = await Product.find(query)
       .sort(sortObj)
       .skip(skip)
       .limit(limitNum);
+    console.log("Found products:", products.length);
     res.status(200).json({
       success: true,
       count: products.length,

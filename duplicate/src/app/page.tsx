@@ -1,4 +1,5 @@
 "use client";
+import React, { useEffect, useState } from "react";
 import ProductListSec from "@/components/common/ProductListSec";
 import Brands from "@/components/homepage/Brands";
 import DressStyle from "@/components/homepage/DressStyle";
@@ -7,9 +8,10 @@ import Reviews from "@/components/homepage/Reviews";
 import { Product } from "@/types/product.types";
 import { Review } from "@/types/review.types";
 
+// Fallback data for new arrivals (in case API fails)
 export const newArrivalsData: Product[] = [
   {
-    id: 1,
+    _id: "1",
     title: "T-shirt with Tape Details",
     srcUrl: "/images/pic1.png",
     gallery: ["/images/pic1.png", "/images/pic10.png", "/images/pic11.png"],
@@ -19,9 +21,12 @@ export const newArrivalsData: Product[] = [
       percentage: 0,
     },
     rating: 4.5,
+    category: "T-shirts",
+    sizes: ["S", "M", "L"],
+    description: "Comfortable t-shirt with tape details"
   },
   {
-    id: 2,
+    _id: "2",
     title: "Skinny Fit Jeans",
     srcUrl: "/images/pic2.png",
     gallery: ["/images/pic2.png"],
@@ -31,9 +36,12 @@ export const newArrivalsData: Product[] = [
       percentage: 20,
     },
     rating: 3.5,
+    category: "Jeans",
+    sizes: ["30", "32", "34"],
+    description: "Stylish skinny fit jeans"
   },
   {
-    id: 3,
+    _id: "3",
     title: "Chechered Shirt",
     srcUrl: "/images/pic3.png",
     gallery: ["/images/pic3.png"],
@@ -43,9 +51,12 @@ export const newArrivalsData: Product[] = [
       percentage: 0,
     },
     rating: 4.5,
+    category: "Shirts",
+    sizes: ["S", "M", "L", "XL"],
+    description: "Classic chechered shirt"
   },
   {
-    id: 4,
+    _id: "4",
     title: "Sleeve Striped T-shirt",
     srcUrl: "/images/pic4.png",
     gallery: ["/images/pic4.png", "/images/pic10.png", "/images/pic11.png"],
@@ -55,63 +66,15 @@ export const newArrivalsData: Product[] = [
       percentage: 30,
     },
     rating: 4.5,
-  },
-];
-
-export const topSellingData: Product[] = [
-  {
-    id: 5,
-    title: "Vertical Striped Shirt",
-    srcUrl: "/images/pic5.png",
-    gallery: ["/images/pic5.png", "/images/pic10.png", "/images/pic11.png"],
-    price: 232,
-    discount: {
-      amount: 0,
-      percentage: 20,
-    },
-    rating: 5.0,
-  },
-  {
-    id: 6,
-    title: "Courage Graphic T-shirt",
-    srcUrl: "/images/pic6.png",
-    gallery: ["/images/pic6.png", "/images/pic10.png", "/images/pic11.png"],
-    price: 145,
-    discount: {
-      amount: 0,
-      percentage: 0,
-    },
-    rating: 4.0,
-  },
-  {
-    id: 7,
-    title: "Loose Fit Bermuda Shorts",
-    srcUrl: "/images/pic7.png",
-    gallery: ["/images/pic7.png"],
-    price: 80,
-    discount: {
-      amount: 0,
-      percentage: 0,
-    },
-    rating: 3.0,
-  },
-  {
-    id: 8,
-    title: "Faded Skinny Jeans",
-    srcUrl: "/images/pic8.png",
-    gallery: ["/images/pic8.png"],
-    price: 210,
-    discount: {
-      amount: 0,
-      percentage: 0,
-    },
-    rating: 4.5,
+    category: "T-shirts",
+    sizes: ["S", "M", "L"],
+    description: "Striped t-shirt with unique sleeve design"
   },
 ];
 
 export const relatedProductData: Product[] = [
   {
-    id: 12,
+    _id: "12",
     title: "Polo with Contrast Trims",
     srcUrl: "/images/pic12.png",
     gallery: ["/images/pic12.png", "/images/pic10.png", "/images/pic11.png"],
@@ -121,9 +84,12 @@ export const relatedProductData: Product[] = [
       percentage: 20,
     },
     rating: 4.0,
+    category: "Shirts",
+    sizes: ["S", "M", "L", "XL"],
+    description: "Polo shirt with contrast trims"
   },
   {
-    id: 13,
+    _id: "13",
     title: "Gradient Graphic T-shirt",
     srcUrl: "/images/pic13.png",
     gallery: ["/images/pic13.png", "/images/pic10.png", "/images/pic11.png"],
@@ -133,9 +99,12 @@ export const relatedProductData: Product[] = [
       percentage: 0,
     },
     rating: 3.5,
+    category: "T-shirts",
+    sizes: ["S", "M", "L"],
+    description: "Gradient graphic t-shirt"
   },
   {
-    id: 14,
+    _id: "14",
     title: "Polo with Tipping Details",
     srcUrl: "/images/pic14.png",
     gallery: ["/images/pic14.png"],
@@ -145,9 +114,12 @@ export const relatedProductData: Product[] = [
       percentage: 0,
     },
     rating: 4.5,
+    category: "Shirts",
+    sizes: ["S", "M", "L", "XL"],
+    description: "Polo shirt with tipping details"
   },
   {
-    id: 15,
+    _id: "15",
     title: "Black Striped T-shirt",
     srcUrl: "/images/pic15.png",
     gallery: ["/images/pic15.png"],
@@ -157,6 +129,9 @@ export const relatedProductData: Product[] = [
       percentage: 30,
     },
     rating: 5.0,
+    category: "T-shirts",
+    sizes: ["S", "M", "L"],
+    description: "Black striped t-shirt"
   },
 ];
 
@@ -207,26 +182,57 @@ export const reviewsData: Review[] = [
 ];
 
 export default function Home() {
+  const [newArrivals, setNewArrivals] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchNewArrivals() {
+      try {
+        const params = new URLSearchParams();
+        params.append("sort", "newest"); // Sort by newest first
+        params.append("limit", "4"); // Limit to 4 products
+        
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/products?${params.toString()}`);
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success && json.data.length > 0) {
+            setNewArrivals(json.data);
+          } else {
+            // If no products found, use fallback data
+            setNewArrivals(newArrivalsData);
+          }
+        } else {
+          // If API call fails, use fallback data
+          setNewArrivals(newArrivalsData);
+        }
+      } catch (err) {
+        console.error("Error fetching new arrivals:", err);
+        // Use fallback data on error
+        setNewArrivals(newArrivalsData);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchNewArrivals();
+  }, []);
+
   return (
     <>
       <Header />
       <Brands />
       <main className="my-[50px] sm:my-[72px]">
-        <ProductListSec
-          title="NEW ARRIVALS"
-          data={newArrivalsData}
-          viewAllLink="/shop#new-arrivals"
-        />
-        <div className="max-w-frame mx-auto px-4 xl:px-0">
-          <hr className="h-[1px] border-t-black/10 my-10 sm:my-16" />
-        </div>
-        <div className="mb-[50px] sm:mb-20">
+        {loading ? (
+          <div className="max-w-frame mx-auto text-center py-10">
+            <div className="text-lg text-gray-500">Loading new arrivals...</div>
+          </div>
+        ) : (
           <ProductListSec
-            title="top selling"
-            data={topSellingData}
-            viewAllLink="/shop#top-selling"
+            title="NEW ARRIVALS"
+            data={newArrivals}
+            viewAllLink="/shop#new-arrivals"
           />
-        </div>
+        )}
         <div className="mb-[50px] sm:mb-20">
           <DressStyle />
         </div>
