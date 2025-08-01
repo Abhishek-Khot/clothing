@@ -3,9 +3,18 @@ const path = require('path');
 const dotenv = require('dotenv');
 const connectDB = require('./config/db');
 const cors = require('cors');
+const cloudinary = require('cloudinary').v2;
 
 // Load env vars
 dotenv.config();
+
+// Configure Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+  secure: true
+});
 
 // Connect to database
 connectDB();
@@ -22,62 +31,23 @@ app.use(cors({ origin: 'http://localhost:3000', credentials: true }));
 // Set up static files
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Serve uploaded images
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+// Commented out local uploads directory since we're using Cloudinary
+// app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Set view engine
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
-// Import routes
+// Import routes and controllers
 const productRoutes = require('./routes/productRoutes');
+const { uploadSingleImage, uploadGalleryImages } = require('./middleware/multer');
 
-// Mount routes
+// Mount API routes
 app.use('/api', productRoutes);
-app.use('/', productRoutes);
 
-// Admin routes - these should be after the API routes
+// Admin routes
 app.get('/admin', (req, res) => {
   res.redirect('/admin/dashboard');
-});
-
-app.get('/admin/dashboard', (req, res) => {
-  res.render('admin/index', { 
-    title: 'Admin Dashboard',
-    success: req.query.success || null
-  });
-});
-
-// Add product routes
-app.get('/admin/add-product', (req, res) => {
-  res.render('admin/add-product', { 
-    title: 'Add Product',
-    error: null,
-    formData: {
-      title: '',
-      description: '',
-      price: '',
-      category: '',
-      discountAmount: '0',
-      discountPercentage: '0'
-    }
-  });
-});
-
-// Handle form submission
-const { createProduct } = require('./controllers/productController');
-const { uploadSingleImage } = require('./middleware/multer');
-
-app.post('/admin/add-product', uploadSingleImage, async (req, res) => {
-  try {
-    await createProduct(req, res);
-  } catch (error) {
-    console.error('Error in form submission:', error);
-    res.status(500).render('error', {
-      message: 'Server Error',
-      error: { status: 500 }
-    });
-  }
 });
 
 // Basic route
@@ -85,7 +55,12 @@ app.get('/', (req, res) => {
   res.render('index', { title: 'Welcome' });
 });
 
-// 404 handler - this should be after all other routes
+
+
+// Mount admin and frontend routes
+app.use('/', productRoutes);
+
+// 404 handler
 app.use((req, res) => {
   res.status(404).render('error', { 
     message: 'Page Not Found',
@@ -112,6 +87,5 @@ const server = app.listen(PORT, () => {
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (err, promise) => {
   console.log(`Error: ${err.message}`);
-  // Close server & exit process
   server.close(() => process.exit(1));
 });

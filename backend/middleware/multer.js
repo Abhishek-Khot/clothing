@@ -1,24 +1,43 @@
 const multer = require('multer');
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
+const cloudinary = require('cloudinary').v2;
 const path = require('path');
-const fs = require('fs');
 
-// Ensure upload directory exists
-const uploadDir = path.join(__dirname, '../public/uploads');
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
+// Configure Cloudinary
+if (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET) {
+  cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+    secure: true
+  });
+  console.log('Cloudinary configured successfully');
+} else {
+  console.warn('Cloudinary credentials not found. Image uploads will not work properly.');
+  console.warn('Please set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET in your .env file');
 }
 
-// Set up storage for uploaded files
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, uploadDir);
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    const ext = path.extname(file.originalname).toLowerCase();
-    cb(null, 'product-' + uniqueSuffix + ext);
+// Set up Cloudinary storage for uploaded files
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: process.env.CLOUDINARY_UPLOAD_FOLDER || 'clothing-store',
+    allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
+    transformation: [
+      { width: 1000, height: 1000, crop: 'limit' },
+      { quality: 'auto:good', fetch_format: 'auto' }
+    ],
+    resource_type: 'image',
+    eager: [
+      { width: 300, height: 300, crop: 'thumb' },
+      { width: 600, height: 600, crop: 'fill' }
+    ],
+    eager_async: true,
+    eager_notification_url: process.env.CLOUDINARY_NOTIFICATION_URL
   }
 });
+
+
 
 // File filter to only allow images
 const fileFilter = (req, file, cb) => {
@@ -47,19 +66,16 @@ const upload = multer({
 const uploadSingleImage = (req, res, next) => {
   upload.single('image')(req, res, function (err) {
     if (err instanceof multer.MulterError) {
-      // A Multer error occurred when uploading
       return res.status(400).json({
         success: false,
         message: err.message
       });
     } else if (err) {
-      // An unknown error occurred
       return res.status(400).json({
         success: false,
         message: err.message || 'Error uploading file'
       });
     }
-    // Everything went fine
     next();
   });
 };
@@ -84,5 +100,6 @@ const uploadGalleryImages = (req, res, next) => {
 
 module.exports = {
   uploadSingleImage,
-  uploadGalleryImages
+  uploadGalleryImages,
+  cloudinary // Export cloudinary for direct use if needed
 };
